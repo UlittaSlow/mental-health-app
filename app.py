@@ -125,6 +125,7 @@ elif menu == "Дневник эмоций":
         st.info("У вас пока нет записей. Заполните форму выше и нажмите 'Сохранить'!")
 
 elif menu == "Статистика":
+    st.title("📊 Статистика")
 
     if not os.path.exists(DATA_FILE):
         st.info("Пока нет данных для графиков. Сначала добавьте записи в Дневник.")
@@ -135,47 +136,83 @@ elif menu == "Статистика":
         if not data:
             st.info("Файл с данными пуст. Добавьте записи.")
         else:
-            # 1. Делаем таблицу и переводим дату в формат datetime
+            # 1. Загружаем данные и превращаем в нормальные даты
             df = pd.DataFrame(data)
             df['date'] = pd.to_datetime(df['date'])
             df = df.sort_values('date')
 
-            # 2. Оставляем только последние 7 дней (для красоты)
-            # (Если записей меньше 7, покажет все, что есть)
-            df_week = df.tail(7).copy()
+            # 2. Вычисляем начало недели (понедельник) для каждой записи
+            # Метод .dt.to_period('W').dt.start_time берет понедельник этой недели
+            df['week_start'] = df['date'].dt.to_period('W').dt.start_time
 
-            # 3. Делаем красивые подписи по оси X (Пн, Вт, Ср...)
-            # Для этого переводим дату в день недели на русском
+            # 3. Получаем список недель, за которые есть записи
+            unique_weeks = df['week_start'].dt.date.unique()
+            unique_weeks = sorted(unique_weeks, reverse=True) # от новых к старым
+
+            # 4. Делаем выпадающий список
+            week_options = []
+            for w in unique_weeks:
+                w_end = w + pd.Timedelta(days=6)
+                w_str = f"{w.strftime('%d %b')} — {w_end.strftime('%d %b')}"
+                week_options.append((w_str, w))
+
+            selected_week_str = st.selectbox("Выберите неделю:", options=[opt[0] for opt in week_options])
+            selected_week = next(opt[1] for opt in week_options if opt[0] == selected_week_str)
+
+            # 5. Фильтруем данные строго за эту неделю
+            df_week = df[df['week_start'].dt.date == selected_week].copy()
+
+            # 6. Делаем подписи по оси X
             days_ru = {0: 'Пн', 1: 'Вт', 2: 'Ср', 3: 'Чт', 4: 'Пт', 5: 'Сб', 6: 'Вс'}
             df_week['day_name'] = df_week['date'].dt.dayofweek.map(days_ru)
 
-            # Формируем красивый заголовок "19-25 октября" на основе данных
-            start_date = df_week['date'].min().strftime('%d')
-            end_date = df_week['date'].max().strftime('%d %B')
-            # Простой перевод месяцев (чтобы не подключать тяжелые библиотеки)
+            # Формируем заголовок
+            start_date = selected_week.strftime('%d')
+            end_date = (selected_week + pd.Timedelta(days=6)).strftime('%d %B')
             months_ru = {'October': 'октября', 'November': 'ноября', 'December': 'декабря',
                          'January': 'января', 'February': 'февраля', 'March': 'марта',
                          'April': 'апреля', 'May': 'мая', 'June': 'июня', 'July': 'июля',
                          'August': 'августа', 'September': 'сентября'}
             for eng, ru in months_ru.items():
                 end_date = end_date.replace(eng, ru)
-
             title_text = f"{start_date}-{end_date}"
 
-            # 4. Строим график тревоги
+            # 7. Создаем "скелет" из 7 дней для оси X
+            all_days = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс']
+            df_plot = pd.DataFrame({'day_name': all_days})
+
+            # 8. Объединяем скелет с нашими отфильтрованными данными
+            df_plot = pd.merge(df_plot, df_week[['day_name', 'anxiety', 'paralysis']], on='day_name', how='left')
+
+            # 9. Строим график
             st.subheader("Уровень фоновой тревоги")
             fig_anxiety = px.line(
-                df_week,
-                x='day_name', # Используем дни недели
+                df_plot,
+                x='day_name',
                 y='anxiety',
                 markers=True,
-                text='anxiety', # Показываем цифру над точкой
                 labels={'day_name': 'День недели', 'anxiety': 'Тревога'}
             )
-            fig_anxiety.update_traces(textposition="top center")
+
+            # 10. Настраиваем ось X
+            fig_anxiety.update_xaxes(categoryorder='array', categoryarray=all_days)
+
+            # 11. Добавляем звездочки (паралич)
+            paralysis_days = df_plot[df_plot['paralysis'] == True]
+            if not paralysis_days.empty:
+                fig_anxiety.add_scatter(
+                    x=paralysis_days['day_name'],
+                    y=paralysis_days['anxiety'],
+                    mode='markers',
+                    marker=dict(symbol='star', size=15, color='red'),
+                    name='Сонный паралич'
+                )
+
             fig_anxiety.update_layout(
-                title=title_text, # Тот самый заголовок "19-25 октября"
+                title=title_text,
                 yaxis_range=[0, 11],
-                xaxis_title=None # Убираем слово "День недели", чтобы было чище
+                xaxis_title=None
             )
             st.plotly_chart(fig_anxiety, use_container_width=True)
+
+            st.caption(f"Записей за эту неделю: {len(df_week)}")

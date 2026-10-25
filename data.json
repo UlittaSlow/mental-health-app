@@ -6,7 +6,7 @@
         "sleep": "Хороший",
         "paralysis": false,
         "headache": false,
-        "description": "мяу"
+        "description": ""
     },
     {
         "date": "2026-10-23",
@@ -16,5 +16,23 @@
         "paralysis": false,
         "headache": false,
         "description": ""
+    },
+    {
+        "date": "2026-10-24",
+        "anxiety": 2,
+        "appetite": "Плохой",
+        "sleep": "Плохой",
+        "paralysis": false,
+        "headache": false,
+        "description": ""
+    },
+    {
+        "date": "2026-10-19",
+        "anxiety": 8,
+        "appetite": "Хороший",
+        "sleep": "Хороший",
+        "paralysis": false,
+        "headache": true,
+        "description": "мяу"
     }
 ]
