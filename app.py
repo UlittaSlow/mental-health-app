@@ -38,24 +38,34 @@ def save_entry(entry):
 # Настройка страницы (заголовок вкладки браузера и иконка)
 st.set_page_config(page_title="Мое приложение", page_icon="🌱", layout="centered")
 
-# Создаем боковое меню для навигации (Экран 1)
-st.sidebar.title("Навигация")
-menu = st.sidebar.radio("Куда пойдем?", ["Главная", "Дневник эмоций", "Статистика"])
+# --- НАВИГАЦИЯ ---
+# Если в памяти нет текущей страницы, ставим по умолчанию "Главная"
+if "current_page" not in st.session_state:
+    st.session_state["current_page"] = "Главная"
 
-# Логика переключения экранов
-if menu == "Главная":
+# Функция для перехода на другой экран
+def go_to(page_name):
+    st.session_state["current_page"] = page_name
+    st.rerun()
+
+if st.session_state["current_page"] == "Главная":
     st.title("🌱 Ментальное здоровье")
     st.write("Добро пожаловать! Это твой личный дневник.")
 
-    # Просто большие кнопки-заглушки для главного экрана
     if st.button("📖 Дневник эмоций", use_container_width=True):
-        st.info("Тут мы потом сделаем переход на форму. А пока нажми 'Дневник эмоций' в меню слева 👈")
+        go_to("Дневник эмоций")
 
     if st.button("📊 Статистика", use_container_width=True):
-        st.info("Тут будут графики. Пока нажми 'Статистика' в меню слева 👈")
+        go_to("Статистика")
 
-elif menu == "Дневник эмоций":
+# --- ЭКРАН 2: ДНЕВНИК ---
+elif st.session_state["current_page"] == "Дневник эмоций":
+    # Кнопка Назад
+    if st.button("← Назад на главную"):
+        go_to("Главная")
+
     st.title("📖 Дневник эмоций")
+
       # 1. Дата
     date_val = st.date_input("Дата")
 
@@ -124,7 +134,11 @@ elif menu == "Дневник эмоций":
     else:
         st.info("У вас пока нет записей. Заполните форму выше и нажмите 'Сохранить'!")
 
-elif menu == "Статистика":
+elif st.session_state["current_page"] == "Статистика":
+
+    if st.button("← Назад на главную"):
+        go_to("Главная")
+
     st.title("📊 Статистика")
 
     if not os.path.exists(DATA_FILE):
