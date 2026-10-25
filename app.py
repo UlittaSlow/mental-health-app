@@ -2,6 +2,7 @@ import streamlit as st
 import json
 import os
 import pandas as pd
+import plotly.express as px
 
 DATA_FILE = "data.json"
 
@@ -124,5 +125,57 @@ elif menu == "Дневник эмоций":
         st.info("У вас пока нет записей. Заполните форму выше и нажмите 'Сохранить'!")
 
 elif menu == "Статистика":
-    st.title("📊 Статистика")
-    st.write("Здесь скоро появятся графики.")
+
+    if not os.path.exists(DATA_FILE):
+        st.info("Пока нет данных для графиков. Сначала добавьте записи в Дневник.")
+    else:
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        if not data:
+            st.info("Файл с данными пуст. Добавьте записи.")
+        else:
+            # 1. Делаем таблицу и переводим дату в формат datetime
+            df = pd.DataFrame(data)
+            df['date'] = pd.to_datetime(df['date'])
+            df = df.sort_values('date')
+
+            # 2. Оставляем только последние 7 дней (для красоты)
+            # (Если записей меньше 7, покажет все, что есть)
+            df_week = df.tail(7).copy()
+
+            # 3. Делаем красивые подписи по оси X (Пн, Вт, Ср...)
+            # Для этого переводим дату в день недели на русском
+            days_ru = {0: 'Пн', 1: 'Вт', 2: 'Ср', 3: 'Чт', 4: 'Пт', 5: 'Сб', 6: 'Вс'}
+            df_week['day_name'] = df_week['date'].dt.dayofweek.map(days_ru)
+
+            # Формируем красивый заголовок "19-25 октября" на основе данных
+            start_date = df_week['date'].min().strftime('%d')
+            end_date = df_week['date'].max().strftime('%d %B')
+            # Простой перевод месяцев (чтобы не подключать тяжелые библиотеки)
+            months_ru = {'October': 'октября', 'November': 'ноября', 'December': 'декабря',
+                         'January': 'января', 'February': 'февраля', 'March': 'марта',
+                         'April': 'апреля', 'May': 'мая', 'June': 'июня', 'July': 'июля',
+                         'August': 'августа', 'September': 'сентября'}
+            for eng, ru in months_ru.items():
+                end_date = end_date.replace(eng, ru)
+
+            title_text = f"{start_date}-{end_date}"
+
+            # 4. Строим график тревоги
+            st.subheader("Уровень фоновой тревоги")
+            fig_anxiety = px.line(
+                df_week,
+                x='day_name', # Используем дни недели
+                y='anxiety',
+                markers=True,
+                text='anxiety', # Показываем цифру над точкой
+                labels={'day_name': 'День недели', 'anxiety': 'Тревога'}
+            )
+            fig_anxiety.update_traces(textposition="top center")
+            fig_anxiety.update_layout(
+                title=title_text, # Тот самый заголовок "19-25 октября"
+                yaxis_range=[0, 11],
+                xaxis_title=None # Убираем слово "День недели", чтобы было чище
+            )
+            st.plotly_chart(fig_anxiety, use_container_width=True)

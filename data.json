@@ -1,38 +1,20 @@
 [
     {
         "date": "2026-10-25",
-        "anxiety": 3,
+        "anxiety": 5,
         "appetite": "Плохой",
         "sleep": "Хороший",
         "paralysis": false,
         "headache": false,
+        "description": "мяу"
+    },
+    {
+        "date": "2026-10-23",
+        "anxiety": 2,
+        "appetite": "Хороший",
+        "sleep": "Хороший",
+        "paralysis": false,
+        "headache": false,
         "description": ""
-    },
-    {
-        "date": "2026-10-25",
-        "anxiety": 2,
-        "appetite": "Удовлетворительный",
-        "sleep": "Хороший",
-        "paralysis": false,
-        "headache": false,
-        "description": "День прошел хорошо, болел живот утром, я купила штаны и написала это приложение. Завтра на работу, чучуть тревожно"
-    },
-    {
-        "date": "2026-10-25",
-        "anxiety": 2,
-        "appetite": "Удовлетворительный",
-        "sleep": "Хороший",
-        "paralysis": false,
-        "headache": false,
-        "description": "День прошел хорошо, болел живот утром, я купила штаны и написала это приложение. Завтра на работу, чучуть тревожно"
-    },
-    {
-        "date": "2026-10-25",
-        "anxiety": 2,
-        "appetite": "Удовлетворительный",
-        "sleep": "Хороший",
-        "paralysis": false,
-        "headache": false,
-        "description": "День прошел хорошо, болел живот утром, я купила штаны и написала это приложение. Завтра на работу, чучуть тревожно"
     }
 ]
