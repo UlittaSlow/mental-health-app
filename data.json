@@ -1,8 +1,8 @@
 [
     {
         "date": "2026-10-25",
-        "anxiety": 2,
-        "appetite": "Удовлетворительный",
+        "anxiety": 3,
+        "appetite": "Плохой",
         "sleep": "Хороший",
         "paralysis": false,
         "headache": false,

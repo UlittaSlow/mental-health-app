@@ -1,22 +1,36 @@
 import streamlit as st
 import json
 import os
+import pandas as pd
 
 DATA_FILE = "data.json"
 
 def save_entry(entry):
-    # Если файла нет, создаем пустой список
+    # 1. Читаем старые данные
     if not os.path.exists(DATA_FILE):
         data = []
     else:
-        # Если файл есть, читаем то, что там уже лежит
         with open(DATA_FILE, "r", encoding="utf-8") as f:
             data = json.load(f)
 
-    # Добавляем новую запись в список
-    data.append(entry)
+    # 2. Ищем, есть ли уже запись на эту дату
+    entry_date = entry["date"]
+    found_index = -1 # -1 значит "не найдено"
 
-    # Сохраняем обновленный список обратно в файл
+    for i, old_entry in enumerate(data):
+        if old_entry.get("date") == entry_date:
+            found_index = i
+            break # Нашли! Дальше можно не искать
+
+    # 3. Обновляем или добавляем
+    if found_index != -1:
+        # Если нашли — заменяем старую запись на новую
+        data[found_index] = entry
+    else:
+        # Если не нашли — добавляем в конец
+        data.append(entry)
+
+    # 4. Сохраняем файл
     with open(DATA_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
@@ -78,6 +92,36 @@ elif menu == "Дневник эмоций":
         save_entry(new_entry)
 
         st.success("✅ Запись успешно сохранена в файл!")
+
+    st.write("---")
+    st.subheader("📚 Мои прошлые записи")
+
+    # Проверяем, существует ли файл с данными
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE, "r", encoding="utf-8") as f:
+            saved_data = json.load(f)
+
+        # Идем по записям с конца (чтобы свежие были сверху)
+        for entry in reversed(saved_data):
+            # Создаем раскрывающийся блок для каждой записи
+            with st.expander(f"📅 {entry.get('date', 'Нет даты')} — Тревога: {entry.get('anxiety', '-')}/10"):
+                st.write(f"**Аппетит:** {entry.get('appetite', '-')}")
+                st.write(f"**Сон:** {entry.get('sleep', '-')}")
+
+                # Собираем симптомы в кучу
+                symptoms = []
+                if entry.get('paralysis'): symptoms.append("Сонный паралич")
+                if entry.get('headache'): symptoms.append("Головная боль")
+
+                if symptoms:
+                    st.write(f"**Симптомы:** {', '.join(symptoms)}")
+                else:
+                    st.write("**Симптомы:** нет")
+
+                if entry.get('description'):
+                    st.write(f"**Описание:** {entry.get('description')}")
+    else:
+        st.info("У вас пока нет записей. Заполните форму выше и нажмите 'Сохранить'!")
 
 elif menu == "Статистика":
     st.title("📊 Статистика")
