@@ -21,7 +21,26 @@ if menu == "Главная":
 
 elif menu == "Дневник эмоций":
     st.title("📖 Дневник эмоций")
-    st.write("Здесь скоро появится форма ввода.")
+      # 1. Дата
+    date_val = st.date_input("Дата")
+
+    # 2. Уровень тревоги (от 1 до 10)
+    anxiety_val = st.slider("Уровень фоновой тревоги", min_value=1, max_value=10, value=5)
+
+    # 3. Аппетит
+    appetite_val = st.radio("Аппетит", ["Плохой", "Удовлетворительный", "Хороший"], horizontal=True)
+
+    # 4. Сон
+    sleep_val = st.radio("Сон", ["Хороший", "Плохой"], horizontal=True)
+
+    # 5. Симптомы (чекбоксы)
+    st.write("Симптомы:")
+    symptom_paralysis = st.checkbox("Сонный паралич")
+    symptom_headache = st.checkbox("Головная боль")
+    symptom_headache = st.checkbox("Приступ тревоги")
+
+    # 6. Описание
+    description_val = st.text_area("Описание", placeholder="Как прошел мой день...")
 
 elif menu == "Статистика":
     st.title("📊 Статистика")
